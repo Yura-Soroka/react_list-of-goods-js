@@ -14,44 +14,54 @@ export const goodsFromServer = [
   'Jam',
   'Garlic',
 ];
+
+const ALPHABET = 'alphabetical';
+const LENGTH = 'length';
+
+const preparedGoods = (goods, sortBy, isReverse) => {
+  const copyGoods = [...goods];
+
+  switch (sortBy) {
+    case ALPHABET:
+      copyGoods.sort((a, b) => a.localeCompare(b));
+      break;
+    case LENGTH:
+      copyGoods.sort(
+        (firstGood, secondGood) => firstGood.length - secondGood.length,
+      );
+      break;
+    default:
+      break;
+  }
+
+  if (isReverse) {
+    copyGoods.reverse();
+  }
+
+  return copyGoods;
+};
+
 export const App = () => {
-  const [goods, setGoods] = useState(goodsFromServer);
-  const [sortOrder, setSortOrder] = useState(null);
+  const [goodsType, setGoodsType] = useState(null);
+  const [isReverse, setIsReversed] = useState(false);
 
-  const handleSortedByLength = () => {
-    const sortedGoods = [...goods].sort(
-      (firstGood, secondGood) => firstGood.length - secondGood.length,
-    );
-
-    setGoods(sortedGoods);
-    setSortOrder('length');
-  };
+  const visibleGoods = preparedGoods(goodsFromServer, goodsType, isReverse);
 
   const handleSortedByAlph = () => {
-    const sortedGoods = [...goods].sort((a, b) => a.localeCompare(b));
+    setGoodsType(ALPHABET);
+  };
 
-    setGoods(sortedGoods);
-    setSortOrder('alphabetical');
+  const handleSortedByLength = () => {
+    setGoodsType(LENGTH);
   };
 
   const handleReversed = () => {
-    const reversedGoods = [...goods].reverse();
-
-    setGoods(reversedGoods);
-    if (sortOrder) {
-      setSortOrder(
-        sortOrder.includes('-reversed')
-          ? sortOrder.replace('-reversed', '')
-          : `${sortOrder}-reversed`,
-      );
-    } else {
-      setSortOrder('reversed');
-    }
+    setIsReversed(!isReverse);
   };
 
   const handleReset = () => {
-    setGoods(goodsFromServer);
-    setSortOrder(null);
+    setGoodsType(null);
+    setIsReversed(false);
   };
 
   return (
@@ -59,7 +69,7 @@ export const App = () => {
       <div className="buttons">
         <button
           type="button"
-          className={`button is-info ${sortOrder === 'alphabetical' ? '' : 'is-light'}`}
+          className={`button is-info ${goodsType === ALPHABET ? '' : 'is-light'}`}
           onClick={handleSortedByAlph}
         >
           Sort alphabetically
@@ -67,7 +77,7 @@ export const App = () => {
 
         <button
           type="button"
-          className={`button is-success ${sortOrder === 'length' ? '' : 'is-light'}`}
+          className={`button is-success ${goodsType === LENGTH ? '' : 'is-light'}`}
           onClick={handleSortedByLength}
         >
           Sort by length
@@ -75,28 +85,32 @@ export const App = () => {
 
         <button
           type="button"
-          className={`button is-warning ${sortOrder?.includes('reversed') ? '' : 'is-light'}`}
+          className={`button is-warning ${isReverse ? '' : 'is-light'}`}
           onClick={handleReversed}
         >
           Reverse
         </button>
 
-        <button
-          type="button"
-          className={`button is-danger ${sortOrder === null ? 'is-hidden' : 'is-light'}`}
-          onClick={handleReset}
-        >
-          Reset
-        </button>
+        {(goodsType !== null || isReverse === true) && (
+          <button
+            type="button"
+            className="button is-danger is-light"
+            onClick={handleReset}
+          >
+            Reset
+          </button>
+        )}
       </div>
 
       <ul>
-        {goods.map(good => (
+        {visibleGoods.map(good => (
           <li key={good} data-cy="Good">
             {good}
           </li>
         ))}
-        {goods.length < goodsFromServer.length && <li data-cy="Good">...</li>}
+        {visibleGoods.length < goodsFromServer.length && (
+          <li data-cy="Good">...</li>
+        )}
       </ul>
     </div>
   );
